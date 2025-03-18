@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize")
 const {db} = require("../config/db")
+const Category = require("./category")
 
 const Product = db.define("products", {
     id: {
@@ -12,14 +13,28 @@ const Product = db.define("products", {
         allowNull: false
     },
     authorId: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    categoryId: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    image: {
         type: DataTypes.STRING,
         allowNull: false
     },
-    name: {
+    price: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    description: {
         type: DataTypes.STRING,
         allowNull: false
     },
 })
 
+Category.hasMany(Product, {foreignKey: "categoryId"})
+Product.belongsTo(Category, {foreignKey: "categoryId"})
 
 module.exports = Product
