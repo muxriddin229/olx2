@@ -10,11 +10,11 @@ const OrderItem = db.define("orderItemss", {
         primaryKey: true
     },
     orderId: {
-        type: DataTypes.STRING,
+        type: DataTypes.INTEGER,
         allowNull: false
     },
     productId: {
-        type: DataTypes.STRING,
+        type: DataTypes.INTEGER,
         allowNull: false
     }
 })
@@ -22,8 +22,8 @@ const OrderItem = db.define("orderItemss", {
 Order.hasMany(OrderItem, {foreignKey: "orderId"})
 OrderItem.belongsTo(Order, {foreignKey: "orderId"})
 
-Product.hasMany(OrderItem, {foreignKey: "productId"})
-OrderItem.belongsTo(Product, {foreignKey: "productId"})
+// Product.hasMany(OrderItem, {foreignKey: "productId"})
+// OrderItem.belongsTo(Product, {foreignKey: "productId"})
 
 
 module.exports = OrderItem
