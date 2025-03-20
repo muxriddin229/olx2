@@ -4,6 +4,7 @@ const { Op } = require("sequelize");
 const joi = require("joi");
 const winston = require("winston");
 const { MongoDB } = require("winston-mongodb");
+const { authorize, protect } = require("../middleware/authMiddleware");
 
 
 const { json, combine, timestamp } = winston.format;
@@ -132,7 +133,7 @@ route.get("/:id", async (req, res) => {
  *       500:
  *         description: Server error
  */
-route.post("/", async (req, res) => {
+route.post("/", protect,authorize([ "admin"]), async (req, res) => {
   try {
     let { name, image } = req.body;
     let schema = joi.object({
@@ -185,7 +186,7 @@ route.post("/", async (req, res) => {
  *       500:
  *         description: Server error
  */
-route.patch("/:id", async (req, res) => {
+route.patch("/:id",protect,authorize([ "admin", "super-admin"]), async (req, res) => {
   try {
     let { id } = req.params;
     let category = await Category.findByPk(id);
@@ -228,11 +229,12 @@ route.patch("/:id", async (req, res) => {
  *       500:
  *         description: Server error
  */
-route.delete("/:id", async (req, res) => {
+route.delete("/:id",protect,authorize([ "admin"]), async (req, res) => {
   try {
     let { id } = req.params;
     let category = await Category.findByPk(id);
     if (!category) return res.status(404).json({ message: "category not found" });
+    
     await category.destroy();
     res.json({ message: "category deleted" });
     routerLogger.log("info", "category deleted")

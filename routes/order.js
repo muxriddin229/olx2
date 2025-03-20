@@ -68,7 +68,6 @@ route.get("/my-orders", async (req, res) => {
     });
     res.json(orders);
     routerLogger.log("info", "orders get")
-
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "server error" });
