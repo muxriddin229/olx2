@@ -2,9 +2,25 @@ const { Router } = require("express");
 const Region = require("../model/region");
 const { Op } = require("sequelize");
 const joi = require("joi");
+const winston = require("winston");
+require("winston-mongodb");
+const route = Router();
+const { json, combine, timestamp } = winston.format;
 
+const logger = winston.createLogger({
+  level: "silly",
+  format: combine(timestamp(), json()),
+  transports: [
+    new winston.transports.File({ filename: "loglar" }),
+    new winston.transports.Console(),
+    new winston.transports.MongoDB({
+      collection: "loglars",
+      db: "mongodb://localhost:27017/nt",
+    }),
+  ],
+});
 
-const route = Router()
+const routerLogger = logger.child({ module: "regions" });
 
 /**
  * @swagger
@@ -33,22 +49,25 @@ const route = Router()
  *         description: Server error
  */
 route.get("/", async (req, res) => {
-    try {
-        let limit = parseInt(req.query.limit) || 10;
-        let page = parseInt(req.query.page) || 1;
-        let offset = (page-1)*limit;
-        let name = req.query.name;
-        let where = {};
-        if(name){
-            where.name = {[Op.startsWith]: name};
-        }
-        let regions = await Region.findAll({where, limit, offset});
-        if(!regions.length) return res.status(404).json({message: "no regions found"});
-        res.json(regions);
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({message: "server error"});
+  try {
+    let limit = parseInt(req.query.limit) || 10;
+    let page = parseInt(req.query.page) || 1;
+    let offset = (page - 1) * limit;
+    let name = req.query.name;
+    let where = {};
+    if (name) {
+      where.name = { [Op.startsWith]: name };
     }
+    let regions = await Region.findAll({ where, limit, offset });
+    if (!regions.length)
+      return res.status(404).json({ message: "no regions found" });
+    res.json(regions);
+    routerLogger.log("info", "region get");
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "server error" });
+    routerLogger.log("error", "error on region get");
+  }
 });
 
 /**
@@ -71,19 +90,21 @@ route.get("/", async (req, res) => {
  *         description: Server error
  */
 route.get("/:id", async (req, res) => {
-    try {
-        let {id} = req.params;
-        let region = await Region.findByPk(id);
-        if(!region) return res.status(404).json({message: "region not found"});
-        res.json(region);
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({message: "server error"});
-    }
+  try {
+    let { id } = req.params;
+    let region = await Region.findByPk(id);
+    if (!region) return res.status(404).json({ message: "region not found" });
+    res.json(region);
+    routerLogger.log("info", "region by id");
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "server error" });
+    routerLogger.log("error", "error on region get by id");
+  }
 });
 
 let schema = joi.object({
-    name: joi.string().min(2).max(55).required()
+  name: joi.string().min(2).max(55).required(),
 });
 
 /**
@@ -109,20 +130,23 @@ let schema = joi.object({
  *         description: Server error
  */
 route.post("/", async (req, res) => {
-    try {
-        let {name} = req.body;
-        let { error } = schema.validate({name});
-        if(error) return res.status(400).json({ message: error.details[0].message });
-        await Region.create({name});
-        res.json({message:"Region created"});
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({message: "server error"});
-    }
+  try {
+    let { name } = req.body;
+    let { error } = schema.validate({ name });
+    if (error)
+      return res.status(400).json({ message: error.details[0].message });
+    await Region.create({ name });
+    res.json({ message: "Region created" });
+    routerLogger.log("info", "region created");
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "server error" });
+    routerLogger.log("error", "error on region create");
+  }
 });
 
 let patchschema = joi.object({
-    name: joi.string().min(2).max(55)
+  name: joi.string().min(2).max(55),
 });
 
 /**
@@ -156,19 +180,22 @@ let patchschema = joi.object({
  *         description: Server error
  */
 route.patch("/:id", async (req, res) => {
-    try {
-        let {id} = req.params;
-        let region = await Region.findByPk(id);
-        if(!region) return res.status(404).json({message: "region not found"});
-        let {name} = req.body;
-        let { error } = patchschema.validate({name});
-        if(error) return res.status(400).json({ message: error.details[0].message });
-        await region.update({name});
-        res.json({message:"Region updated"});
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({message: "server error"});
-    }
+  try {
+    let { id } = req.params;
+    let region = await Region.findByPk(id);
+    if (!region) return res.status(404).json({ message: "region not found" });
+    let { name } = req.body;
+    let { error } = patchschema.validate({ name });
+    if (error)
+      return res.status(400).json({ message: error.details[0].message });
+    await region.update({ name });
+    res.json({ message: "Region updated" });
+    routerLogger.log("info", "region updated");
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "server error" });
+    routerLogger.log("error", "error on region update");
+  }
 });
 
 /**
@@ -191,16 +218,18 @@ route.patch("/:id", async (req, res) => {
  *         description: Server error
  */
 route.delete("/:id", async (req, res) => {
-    try {
-        let {id} = req.params;
-        let region = await Region.findByPk(id);
-        if(!region) return res.status(404).json({message: "region not found"});
-        await region.destroy();
-        res.json({message:"Region deleted"});
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({message: "server error"});
-    }
+  try {
+    let { id } = req.params;
+    let region = await Region.findByPk(id);
+    if (!region) return res.status(404).json({ message: "region not found" });
+    await region.destroy();
+    res.json({ message: "Region deleted" });
+    routerLogger.log("info", "region deleted");
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "server error" });
+    routerLogger.log("error", "error on region delete");
+  }
 });
 
 module.exports = route;

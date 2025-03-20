@@ -4,6 +4,25 @@ const User = require("../model/user");
 const OrderItem = require("../model/orderItem");
 const Product = require("../model/product");
 const route = Router()
+const winston = require("winston");
+require("winston-mongodb")
+
+const { json, combine, timestamp } = winston.format;
+
+const logger = winston.createLogger({
+  level: "silly",
+  format: combine(timestamp(), json()),
+  transports: [
+    new winston.transports.File({  filename: "loglar" }),
+    new winston.transports.Console(),
+    new winston.transports.MongoDB({
+      collection: "loglars",
+      db: "mongodb://localhost:27017/nt"
+    }),
+  ],
+});
+
+const routerLogger = logger.child({module: "orders"})
 /**
  * @swagger
  * /orders/my-orders:
@@ -47,9 +66,13 @@ route.get("/my-orders", async (req, res) => {
       ],
     });
     res.json(orders);
+    routerLogger.log("info", "orders get")
+
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "server error" });
+    routerLogger.log("error", "error on orders get")
+
   }
 });
 
@@ -82,9 +105,13 @@ route.post("/", async (req, res) => {
     if (!user) return res.status(404).json({ message: "user not found" });
     let order = await Order.create({ userId });
     res.json({ message: "order created", orderId: order.id });
+    routerLogger.log("info", "orders created")
+
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "server error" });
+    routerLogger.log("error", "error on orders post")
+
   }
 });
 

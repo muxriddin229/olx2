@@ -4,7 +4,25 @@ const joi = require("joi");
 const User = require("../model/user");
 const Product = require("../model/product");
 const { Op } = require("sequelize");
+const winston = require("winston");
+require("winston-mongodb")
 
+const { json, combine, timestamp } = winston.format;
+
+const logger = winston.createLogger({
+  level: "silly",
+  format: combine(timestamp(), json()),
+  transports: [
+    new winston.transports.File({  filename: "loglar" }),
+    new winston.transports.Console(),
+    new winston.transports.MongoDB({
+      collection: "loglars",
+      db: "mongodb://localhost:27017/nt"
+    }),
+  ],
+});
+
+const routerLogger = logger.child({module: "comments"})
 const route = Router();
 
 
@@ -60,9 +78,13 @@ route.get("/my-comments", async (req, res) => {
     });
     if (!comments.length) return res.status(404).json("no comments found");
     res.json(comments);
+    routerLogger.log("info", "comment get")
+
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "server error" });
+    routerLogger.log("error", "error on comment get")
+
   }
 });
 
@@ -114,9 +136,13 @@ route.post("/", async (req, res) => {
     if (!prd) return res.status(404).json({ message: "product not found" });
     await Comment.create({ userId, productId, star, message });
     res.json({ message: "comment created" });
+    routerLogger.log("info", "comment created")
+
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "server error" });
+    routerLogger.log("error", "error on comment create")
+
   }
 });
 
