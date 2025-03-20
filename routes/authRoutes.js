@@ -12,7 +12,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /register:
+ * /auth/register:
  *   post:
  *     summary: "Yangi foydalanuvchi ro‘yxatdan o‘tadi"
  *     tags: [Authentication]
@@ -59,7 +59,7 @@ router.post("/register", register);
 
 /**
  * @swagger
- * /login:
+ * /auth/login:
  *   post:
  *     summary: "Foydalanuvchi tizimga kiradi"
  *     tags: [Authentication]
@@ -89,7 +89,7 @@ router.post("/login", login);
 
 /**
  * @swagger
- * /users:
+ * /auth/users:
  *   get:
  *     summary: "Foydalanuvchilarni olish (Pagination, Filter, Sorting)"
  *     tags: [Users]
@@ -128,7 +128,7 @@ router.get("/users", getUsers);
 
 /**
  * @swagger
- * /users/{id}:
+ * /auth/users/{id}:
  *   get:
  *     summary: "Foydalanuvchini ID bo‘yicha olish"
  *     tags: [Users]
@@ -149,7 +149,7 @@ router.get("/users/:id", getUserById);
 
 /**
  * @swagger
- * /users/{id}:
+ * /auth/users/{id}:
  *   put:
  *     summary: "Foydalanuvchini yangilash"
  *     tags: [Users]
@@ -190,7 +190,7 @@ router.patch("/users/:id", updateUser);
 
 /**
  * @swagger
- * /users/{id}:
+ * /auth/users/{id}:
  *   delete:
  *     summary: "Foydalanuvchini o‘chirish"
  *     tags: [Users]

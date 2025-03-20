@@ -5,11 +5,6 @@ const joi = require("joi");
 
 const route = Router();
 
-
-
-const swaggerDocs = swaggerJsDoc(swaggerOptions);
-route.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
-
 /**
  * @swagger
  * /categories:

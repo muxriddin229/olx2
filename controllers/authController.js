@@ -1,4 +1,4 @@
-const bcrypt = require("bcryptjs");
+const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { Op } = require("sequelize");
 const User = require("../model/user");
@@ -12,11 +12,11 @@ const {
 // 🔹 Foydalanuvchini ro‘yxatdan o‘tkazish (Register)
 exports.register = async (req, res) => {
   try {
-    const { error } = registerSchema.validate(req.body);
+    
+    const { fullName,image, email, phone, password, role, regionID } = req.body;
+    const { error } = registerSchema.validate({ fullName, email, phone, password});
     if (error)
       return res.status(400).json({ message: error.details[0].message });
-
-    const { fullName, email, phone, password, role, regionID } = req.body;
 
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser)
@@ -28,14 +28,18 @@ exports.register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await User.create({
       fullName,
+      image,
       email,
       phone,
       password: hashedPassword,
       role,
+      status: "PANDING",
       regionID,
     });
     res.status(201).json({ message: "Foydalanuvchi yaratildi.", user: newUser });
   } catch (error) {
+    console.log(error);
+    
     res.status(500).json({ message: "Server xatosi", error });
   }
 };

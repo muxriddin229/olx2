@@ -3,9 +3,12 @@ const Region = require("../model/region");
 const { Op } = require("sequelize");
 const joi = require("joi");
 
+
+const route = Router()
+
 /**
  * @swagger
- * /regions:
+ * /region:
  *   get:
  *     summary: Get all regions
  *     parameters:
@@ -85,7 +88,7 @@ let schema = joi.object({
 
 /**
  * @swagger
- * /regions:
+ * /region:
  *   post:
  *     summary: Create a new region
  *     requestBody:
