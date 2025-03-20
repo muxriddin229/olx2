@@ -1,7 +1,7 @@
 const express = require("express");
 const { Op } = require("sequelize");
 const Product = require("../model/product");
-const { authMiddleware } = require("../middlewares/authMiddleware");
+const { authMiddleware } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
