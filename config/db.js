@@ -13,7 +13,7 @@ async function connectDb(){
         console.log("db synced");
     } catch (error) {
         console.log(error);
-        
+
     }
 }
 
