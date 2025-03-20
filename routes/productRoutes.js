@@ -9,6 +9,7 @@ const {
 } = require("../validations/productValidation");
 
 const winston = require("winston");
+const User = require("../model/user");
 require("winston-mongodb");
 const router = Router();
 const { json, combine, timestamp } = winston.format;
@@ -80,8 +81,9 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-router.post("/", authMiddleware, async (req, res) => {
+router.post("/", authMiddleware(["shop", "admin"]), async (req, res) => {
   try {
+    let id = req.user.id;
     let { error } = productSchema.validate(req.body);
     if (error)
       return res.status(400).json({ message: error.details[0].message });
@@ -96,25 +98,34 @@ router.post("/", authMiddleware, async (req, res) => {
   }
 });
 
-router.patch("/:id", authMiddleware, async (req, res) => {
-  try {
-    let product = await Product.findByPk(req.params.id);
-    if (!product)
-      return res.status(404).json({ message: "Mahsulot topilmadi" });
+router.patch(
+  "/:id",
+  authMiddleware(["shop", "admin", "super-admin"]),
+  async (req, res) => {
+    try {
+      let id = req.user.id;
+      let user = await User.findByPk(id);
 
-    let { error } = productPatchSchema.validate(req.body);
-    if (error)
-      return res.status(400).json({ message: error.details[0].message });
+      let product = await Product.findByPk(req.params.id);
+      if (!product)
+        return res.status(404).json({ message: "Mahsulot topilmadi" });
+      if (user.role == "shop" && product.authorId != id)
+        return res.status(400).json({ message: "it's not your product" });
 
-    await product.update(req.body);
-    res.json({ message: "Mahsulot yangilandi", product });
-    routerLogger.log("info", "product updated");
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Server xatolik", error });
-    routerLogger.log("error", "error on product update");
+      let { error } = productPatchSchema.validate(req.body);
+      if (error)
+        return res.status(400).json({ message: error.details[0].message });
+
+      await product.update(req.body);
+      res.json({ message: "Mahsulot yangilandi", product });
+      routerLogger.log("info", "product updated");
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: "Server xatolik", error });
+      routerLogger.log("error", "error on product update");
+    }
   }
-});
+);
 
 router.delete("/:id", authMiddleware, async (req, res) => {
   try {

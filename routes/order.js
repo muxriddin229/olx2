@@ -76,6 +76,38 @@ route.get("/my-orders", async (req, res) => {
   }
 });
 
+
+route.get("/orders", async (req, res) => {
+  try {
+    let limit = parseInt(req.query.limit) || 10;
+    let page = parseInt(req.query.page) || 1;
+    let offset = (page - 1) * limit;
+    let orders = await Order.findAll({
+      limit,
+      offset,
+      include: [
+        {
+          model: OrderItem,
+          include: [
+            {
+              model: Product,
+              attributes: ["name", "price"],
+            },
+          ],
+        },
+      ],
+    });
+    res.json(orders);
+    routerLogger.log("info", "orders get")
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "server error" });
+    routerLogger.log("error", "error on orders get")
+
+  }
+});
+
 /**
  * @swagger
  * /orders:
