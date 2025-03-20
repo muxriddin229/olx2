@@ -3,7 +3,8 @@ const Region = require("../model/region");
 const { Op } = require("sequelize");
 const joi = require("joi");
 const winston = require("winston");
-require("winston-mongodb");
+const { MongoDB } = require("winston-mongodb");
+
 const route = Router();
 const { json, combine, timestamp } = winston.format;
 
@@ -13,7 +14,7 @@ const logger = winston.createLogger({
   transports: [
     new winston.transports.File({ filename: "loglar" }),
     new winston.transports.Console(),
-    new winston.transports.MongoDB({
+    new MongoDB({
       collection: "loglars",
       db: "mongodb://localhost:27017/nt",
     }),

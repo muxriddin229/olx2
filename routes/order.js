@@ -5,7 +5,8 @@ const OrderItem = require("../model/orderItem");
 const Product = require("../model/product");
 const route = Router()
 const winston = require("winston");
-require("winston-mongodb")
+const { MongoDB } = require("winston-mongodb");
+
 
 const { json, combine, timestamp } = winston.format;
 
@@ -15,7 +16,7 @@ const logger = winston.createLogger({
   transports: [
     new winston.transports.File({  filename: "loglar" }),
     new winston.transports.Console(),
-    new winston.transports.MongoDB({
+    new MongoDB({
       collection: "loglars",
       db: "mongodb://localhost:27017/nt"
     }),
