@@ -1,8 +1,8 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { Op } = require("sequelize");
-const User = require("../models/user");
-const Region = require("../models/region");
+const User = require("../model/user");
+const Region = require("../model/region");
 const generateToken = require("../utils/generateToken");
 const {
   registerSchema,
@@ -21,6 +21,9 @@ exports.register = async (req, res) => {
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser)
       return res.status(400).json({ message: "Email allaqachon mavjud." });
+
+    let region = await Region.findByPk(regionID)
+    if(!region ) return res.status(404).json({message: "region not found"})
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await User.create({
@@ -48,11 +51,11 @@ exports.login = async (req, res) => {
 
     const user = await User.findOne({ where: { email } });
     if (!user)
-      return res.status(400).json({ message: "Email yoki parol noto'g'ri." });
+      return res.status(400).json({ message: "Email noto'g'ri." });
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
-      return res.status(400).json({ message: "Email yoki parol noto'g'ri." });
+      return res.status(400).json({ message: "Parol noto'g'ri." });
 
     const token = generateToken(user);
     res.json({ message: "Tizimga muvaffaqiyatli kirdingiz.", token, user });

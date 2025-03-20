@@ -25,6 +25,19 @@ route.get("/", async (req, res) => {
   }
 });
 
+route.get("/:id", async (req, res) => {
+  try {
+    let {id} = req.params
+    let category = await Category.findByPk(id);
+    if (!category)
+      return res.status(404).json({ message: "category not found" });
+    res.json(category);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "server error" });
+  }
+});
+
 let schema = joi.object({
   name: joi.string().min(2).max(55).required(),
   image: joi.string().min(2).required(),

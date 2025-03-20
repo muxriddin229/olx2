@@ -24,6 +24,18 @@ route.get("/", async (req, res)=>{
     }
 })
 
+route.get("/:id", async (req, res)=>{
+    try {
+        let {id} = req.params
+        let region = await Region.findByPk(id)
+        if(!region) return res.status(404).json({message: "region not found"})
+        res.json(region)
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({message: "server error"})
+    }
+})
+
 let schema = joi.object({
     name: joi.string().min(2).max(55).required()
 })

@@ -14,7 +14,7 @@ const Order = db.define("orders", {
     }
 })
 
-// User.hasMany(Order, {foreignKey: "userId"})
-// Order.belongsTo(User, {foreignKey: "userId"})
+User.hasMany(Order, {foreignKey: "userId"})
+Order.belongsTo(User, {foreignKey: "userId"})
 
 module.exports = Order

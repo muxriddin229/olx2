@@ -1,9 +1,9 @@
 const { db } = require("../config/db");
-const User = require("./user");
-const Region = require("./Region");
-const Comment = require("./Comment");
-const Order = require("./Order");
-const OrderItem = require("./OrderItem");
+const User = require("../model/user");
+const Region = require("../model/Region");
+const Comment = require("../model/Comment");
+const Order = require("../model/Order");
+const OrderItem = require("../model/OrderItem");
 
 // Region - User (1:N)
 Region.hasMany(User, { foreignKey: "regionID", onDelete: "CASCADE" });
