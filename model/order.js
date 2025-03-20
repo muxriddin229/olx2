@@ -9,7 +9,7 @@ const Order = db.define("orders", {
         primaryKey: true
     },
     userId: {
-        type: DataTypes.STRING,
+        type: DataTypes.INTEGER,
         allowNull: false
     }
 })

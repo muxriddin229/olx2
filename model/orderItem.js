@@ -10,11 +10,11 @@ const OrderItem = db.define("orderItemss", {
         primaryKey: true
     },
     orderId: {
-        type: DataTypes.STRING,
+        type: DataTypes.INTEGER,
         allowNull: false
     },
     productId: {
-        type: DataTypes.STRING,
+        type: DataTypes.INTEGER,
         allowNull: false
     }
 })
