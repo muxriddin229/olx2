@@ -2,29 +2,14 @@ const express = require("express");
 const { Op } = require("sequelize");
 const Product = require("../models/product");
 const { authMiddleware } = require("../middlewares/authMiddleware");
+const { validateProduct, validateFilter } = require("../validations/productValidation");
 
 const router = express.Router();
 
 
-const validateProduct = (req, res, next) => {
-    const { name, authorId, categoryId, image, price, description } = req.body;
-    
-    if (!name || !image || !description) {
-        return res.status(400).json({ message: "Ism, rasm va tavsif bo'sh bo'lmasligi kerak" });
-    }
-    if (!price || isNaN(price) || price <= 0) {
-        return res.status(400).json({ message: "Narx musbat son bo'lishi kerak" });
-    }
-    if (!Number.isInteger(authorId) || !Number.isInteger(categoryId)) {
-        return res.status(400).json({ message: "AuthorId va CategoryId butun son bo'lishi kerak" });
-    }
-    next();
-};
-
-
-router.get("/", async (req, res) => {
+router.get("/", validateFilter, async (req, res) => {
     try {
-        const { sort, filter, minPrice, maxPrice, category } = req.query;
+        const { sort, minPrice, maxPrice, category, filter } = req.query;
         let whereCondition = {};
 
         if (minPrice || maxPrice) {
@@ -35,6 +20,10 @@ router.get("/", async (req, res) => {
 
         if (category) {
             whereCondition.categoryId = category;
+        }
+
+        if (filter) {
+            whereCondition.name = { [Op.like]: `%${filter}%` };
         }
 
         let orderCondition = [];
@@ -67,7 +56,6 @@ router.get("/:id", async (req, res) => {
     }
 });
 
-
 router.post("/", authMiddleware, validateProduct, async (req, res) => {
     try {
         const product = await Product.create(req.body);
@@ -95,6 +83,7 @@ router.delete("/:id", authMiddleware, async (req, res) => {
     try {
         const product = await Product.findByPk(req.params.id);
         if (!product) return res.status(404).json({ message: "Mahsulot topilmadi" });
+
         await product.destroy();
         res.json({ message: "Mahsulot o'chirildi" });
     } catch (error) {
