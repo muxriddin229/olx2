@@ -3,26 +3,22 @@ const jwt = require("jsonwebtoken");
 const { Op } = require("sequelize");
 const User = require("../model/user");
 const Region = require("../model/region");
-const {generateAccessToken, generateRefreshToken} = require("../utils/generateToken");
+const {
+  generateAccessToken,
+  generateRefreshToken,
+} = require("../utils/generateToken");
 const upload = require("../middleware/multer");
 const {
   registerSchema,
   loginSchema,
 } = require("../validations/authValidation");
-const { authorize, protect} = require("../middleware/authMiddleware");
+const { authorize, protect } = require("../middleware/authMiddleware");
+const { userValidation } = require("../validations/userValidation");
 
 // 🔹 Foydalanuvchini ro‘yxatdan o‘tkazish (Register)
 exports.register = async (req, res) => {
   try {
-    const { fullName, email, phone, password, role, regionID, image, year} = req.body;
-
-
-    const { error } = registerSchema.validate({
-      fullName,
-      email,
-      phone,
-      password,
-    });
+    const { error } = userValidation.validate(req.body);
     if (error)
       return res.status(400).json({ message: error.details[0].message });
 
@@ -35,15 +31,9 @@ exports.register = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await User.create({
-      fullName,
-      image,
-      email,
-      phone,
+      ...req.body,
       password: hashedPassword,
-      role,
       status: "PENDING",
-      regionID,
-      year
     });
     res
       .status(201)
@@ -70,14 +60,18 @@ exports.login = async (req, res) => {
 
     const actoken = generateAccessToken(user);
     const retoken = generateRefreshToken(user);
-    res.json({ message: "Tizimga muvaffaqiyatli kirdingiz.", actoken, retoken});
+    res.json({
+      message: "Tizimga muvaffaqiyatli kirdingiz.",
+      actoken,
+      retoken,
+    });
   } catch (error) {
     res.status(500).json({ message: "Server xatosi", error });
   }
 };
 
 // 🔹 Barcha foydalanuvchilarni olish (RBAC bilan)
-(exports.getUsers = protect,authorize(["ADMIN", "SUPER_ADMIN"])),
+((exports.getUsers = protect), authorize(["ADMIN", "SUPER_ADMIN"])),
   async (req, res) => {
     try {
       const {
