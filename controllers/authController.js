@@ -4,6 +4,32 @@ const { Op } = require("sequelize");
 const User = require("../model/user");
 const Region = require("../model/region");
 const sendSms = require("../utils/eskiz");
+const { totp } = require("otplib");
+const nodemailer = require("nodemailer");
+
+
+totp.options = {
+  step: 3000,
+};
+
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: "hadiyhadiy2008@gmail.com",
+    pass: "cbzk bmns kqyz xsqn",
+  },
+});
+
+async function sendMail(email, otp) {
+  try {
+    await transporter.sendMail({
+      to: email,
+      text: `Your one-time password: ${otp}`,
+    });
+  } catch (error) {
+    console.log(error);
+  }
+}
 const {
   generateAccessToken,
   generateRefreshToken,
@@ -33,16 +59,16 @@ exports.register = async (req, res) => {
     if (!region) return res.status(404).json({ message: "Region topilmadi." });
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = totp.generate(email + "soz")
 
     const newUser = await User.create({
       ...req.body,
       password: hashedPassword,
-      otp,
       status: "PENDING",
     });
 
     await sendSms(phone, `Tasdiqlash kodi: ${otp}`);
+    await sendMail(email, otp);
     res.status(201).json({
       message: "Foydalanuvchi yaratildi. OTP yuborildi.",
       userId: newUser.id,
