@@ -16,7 +16,7 @@ const logger = winston.createLogger({
     new winston.transports.File({ filename: "loglar.log" }),
     new winston.transports.Console(),
     new MongoDB({
-      db: "nt",
+      db: "mongodb://localhost:27017/nt",
       options: { useNewUrlParser: true, useUnifiedTopology: true },
       collection: "loglars",
     }),

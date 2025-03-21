@@ -14,6 +14,11 @@ const { sendSms } = require("./utils/eskiz");
 const app = express();
 app.use(express.json());
 
+app.use("/uploads", express.static("uploads"));
+app.use("/upload", require("./middleware/multer"));
+
+
+
 connectDb();
 
 const swaggerOptions = {
