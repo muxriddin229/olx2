@@ -1,58 +1,22 @@
-require("dotenv").config();
 const axios = require("axios");
+let api = axios.create({
+  baseURL: "https://notify.eskiz.uz/api/",
+  headers: {
+    Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDUxNDU0MzYsImlhdCI6MTc0MjU1MzQzNiwicm9sZSI6InRlc3QiLCJzaWduIjoiZTQyZGU0MGU2MmYyMDVjMDc3MmU4M2ZlMTBhZjFmMGZhOTQxOThjYWM0NDljYTdlMzg1ZDExYjYxODYxNzU2YSIsInN1YiI6Ijk3MzMifQ.k00sr2eUu2Ij14ea0Wy9nMnBgY63RZzbuCdLoZTNI5A`,
+  },
+});
 
-let token = null;
-
-// Eskizga login qilib token olish
-const getToken = async () => {
+async function sendSMS(tel, otp) {
   try {
-    const response = await axios.post(
-      "https://notify.eskiz.uz/api/auth/login",
-      {
-        email: process.env.ESKIZ_EMAIL,
-        password: process.env.ESKIZ_PASSWORD,
-      }
-    );
-    token = response.data.data.token;
+    api.post("message/sms/send", {
+      mobile_phone: tel,
+      message: "Bu Eskiz dan test",
+    });
+    console.log("sended", otp, tel);
   } catch (error) {
-    console.error(
-      "Eskiz login xatosi:",
-      error.response ? error.response.data : error.message
-    );
+    console.log(error);
+    throw new Error(error);
   }
-};
+}
 
-// SMS yuborish funksiyasi
-const sendSms = async (phone, message) => {
-  if (!token) {
-    await getToken();
-  }
-
-  try {
-    const response = await axios.post(
-      "https://notify.eskiz.uz/api/message/sms/send",
-      {
-        mobile_phone: phone,
-        message: message,
-        from: "4546", // Eskizdan tasdiqlangan sender ID
-      },
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
-
-    console.log("SMS yuborildi:", response.data);
-  } catch (error) {
-    console.error(
-      "SMS yuborish xatosi:",
-      error.response ? error.response.data : error.message
-    );
-    if (error.response && error.response.status === 401) {
-      // Agar token eskirgan bo‘lsa, qayta login qilib urinamiz
-      await getToken();
-      return sendSms(phone, message);
-    }
-  }
-};
-
-module.exports = { sendSms };
+module.exports = sendSMS;

@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const { Op } = require("sequelize");
 const User = require("../model/user");
 const Region = require("../model/region");
-const { sendSms } = require("../utils/eskiz");
+const sendSms = require("../utils/eskiz");
 const { totp } = require("otplib");
 const nodemailer = require("nodemailer");
 
@@ -66,7 +66,7 @@ exports.register = async (req, res) => {
       status: "PENDING",
     });
 
-    await sendSms(phone, `Tasdiqlash kodi: ${otp}`);
+    await sendSms(phone, otp);
     await sendMail(email, otp);
     res.status(201).json({
       message: "Foydalanuvchi yaratildi. OTP yuborildi.",
