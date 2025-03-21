@@ -9,15 +9,12 @@ const regionRoutes = require("./routes/region");
 const commentRoutes = require("./routes/comment");
 const swaggerJsDoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
-const { sendSms } = require("./utils/eskiz");
 
 const app = express();
 app.use(express.json());
 
 app.use("/uploads", express.static("uploads"));
 app.use("/upload", require("./middleware/multer"));
-
-
 
 connectDb();
 
@@ -52,8 +49,6 @@ const swaggerOptions = {
   },
   apis: ["./routes/*.js"],
 };
-
-sendSms("998901234567", "Sizning tasdiqlash kodingiz: 123456");
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));

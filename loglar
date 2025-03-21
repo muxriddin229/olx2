@@ -17,3 +17,5 @@
 {"level":"info","message":"orderItem created","module":"orderItems","timestamp":"2025-03-21T02:00:35.842Z"}
 {"level":"info","message":"orderItem created","module":"orderItems","timestamp":"2025-03-21T02:00:36.396Z"}
 {"level":"info","message":"orders get","module":"orders","timestamp":"2025-03-21T02:00:38.637Z"}
+{"level":"info","message":"region created","module":"regions","timestamp":"2025-03-21T09:51:16.006Z"}
+{"level":"info","message":"region created","module":"regions","timestamp":"2025-03-21T10:00:11.969Z"}

@@ -3,10 +3,9 @@ const jwt = require("jsonwebtoken");
 const { Op } = require("sequelize");
 const User = require("../model/user");
 const Region = require("../model/region");
-const sendSms = require("../utils/eskiz");
+const { sendSms } = require("../utils/eskiz");
 const { totp } = require("otplib");
 const nodemailer = require("nodemailer");
-
 
 totp.options = {
   step: 3000,
@@ -59,7 +58,7 @@ exports.register = async (req, res) => {
     if (!region) return res.status(404).json({ message: "Region topilmadi." });
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const otp = totp.generate(email + "soz")
+    const otp = totp.generate(email + "soz");
 
     const newUser = await User.create({
       ...req.body,
