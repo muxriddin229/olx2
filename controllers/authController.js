@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const { Op } = require("sequelize");
 const User = require("../model/user");
 const Region = require("../model/region");
+const sendSms = require("../utils/eskiz");
 const {
   generateAccessToken,
   generateRefreshToken,
@@ -15,9 +16,11 @@ const {
 const { authorize, protect } = require("../middleware/authMiddleware");
 const { userValidation } = require("../validations/userValidation");
 
-// 🔹 Foydalanuvchini ro‘yxatdan o‘tkazish (Register)
+// 🔹 Foydalanuvchini ro‘yxatdan o‘tkazish (Register) - OTP yuboriladi
 exports.register = async (req, res) => {
   try {
+    const { email, password, phone, regionID } = req.body;
+
     const { error } = userValidation.validate(req.body);
     if (error)
       return res.status(400).json({ message: error.details[0].message });
@@ -30,21 +33,45 @@ exports.register = async (req, res) => {
     if (!region) return res.status(404).json({ message: "Region topilmadi." });
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
     const newUser = await User.create({
       ...req.body,
       password: hashedPassword,
+      otp,
       status: "PENDING",
     });
-    res
-      .status(201)
-      .json({ message: "Foydalanuvchi yaratildi.", user: newUser });
+
+    await sendSms(phone, `Tasdiqlash kodi: ${otp}`);
+    res.status(201).json({
+      message: "Foydalanuvchi yaratildi. OTP yuborildi.",
+      userId: newUser.id,
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Server xatosi", error });
   }
 };
 
-// 🔹 Tizimga kirish (Login)
+// 🔹 Foydalanuvchini tasdiqlash (OTP tekshirish)
+exports.verifyOtp = async (req, res) => {
+  try {
+    const { userId, otp } = req.body;
+    const user = await User.findByPk(userId);
+
+    if (!user)
+      return res.status(404).json({ message: "Foydalanuvchi topilmadi." });
+    if (user.otp !== otp)
+      return res.status(400).json({ message: "Noto‘g‘ri OTP." });
+
+    await user.update({ status: "ACTIVE", otp: null });
+    res.json({ message: "Foydalanuvchi tasdiqlandi." });
+  } catch (error) {
+    res.status(500).json({ message: "Server xatosi", error });
+  }
+};
+
+// 🔹 Tizimga kirish (Login) - Faqat tasdiqlangan foydalanuvchilar
 exports.login = async (req, res) => {
   try {
     const { error } = loginSchema.validate(req.body);
@@ -54,6 +81,10 @@ exports.login = async (req, res) => {
     const { email, password } = req.body;
     const user = await User.findOne({ where: { email } });
     if (!user) return res.status(400).json({ message: "Email noto'g'ri." });
+    if (user.status !== "ACTIVE")
+      return res
+        .status(403)
+        .json({ message: "Foydalanuvchi hali tasdiqlanmagan." });
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: "Parol noto'g'ri." });
@@ -71,42 +102,41 @@ exports.login = async (req, res) => {
 };
 
 // 🔹 Barcha foydalanuvchilarni olish (RBAC bilan)
-((exports.getUsers = protect), authorize(["ADMIN", "SUPER_ADMIN"])),
-  async (req, res) => {
-    try {
-      const {
-        page = 1,
-        limit = 10,
-        sort = "createdAt",
-        order = "DESC",
-        role,
-        search,
-      } = req.query;
-      const where = {};
-      if (role) where.role = role;
-      if (search) {
-        where[Op.or] = [
-          { fullName: { [Op.like]: `%${search}%` } },
-          { email: { [Op.like]: `%${search}%` } },
-        ];
-      }
-      const users = await User.findAndCountAll({
-        where,
-        include: { model: Region, attributes: ["name"] },
-        order: [[sort, order]],
-        limit: parseInt(limit),
-        offset: (parseInt(page) - 1) * parseInt(limit),
-      });
-      res.json({
-        total: users.count,
-        page: parseInt(page),
-        totalPages: Math.ceil(users.count / parseInt(limit)),
-        data: users.rows,
-      });
-    } catch (error) {
-      res.status(500).json({ message: "Server xatosi", error });
+exports.getUsers = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      sort = "createdAt",
+      order = "DESC",
+      role,
+      search,
+    } = req.query;
+    const where = {};
+    if (role) where.role = role;
+    if (search) {
+      where[Op.or] = [
+        { fullName: { [Op.like]: `%${search}%` } },
+        { email: { [Op.like]: `%${search}%` } },
+      ];
     }
-  };
+    const users = await User.findAndCountAll({
+      where,
+      include: { model: Region, attributes: ["name"] },
+      order: [[sort, order]],
+      limit: parseInt(limit),
+      offset: (parseInt(page) - 1) * parseInt(limit),
+    });
+    res.json({
+      total: users.count,
+      page: parseInt(page),
+      totalPages: Math.ceil(users.count / parseInt(limit)),
+      data: users.rows,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server xatosi", error });
+  }
+};
 
 // 🔹 Foydalanuvchini ID bo‘yicha olish
 exports.getUserById = async (req, res) => {
@@ -129,7 +159,6 @@ exports.getUserById = async (req, res) => {
       const user = await User.findByPk(req.params.id);
       if (!user)
         return res.status(404).json({ message: "Foydalanuvchi topilmadi" });
-
       await user.update(req.body);
       res.json({ message: "Foydalanuvchi yangilandi", user });
     } catch (error) {

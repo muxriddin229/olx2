@@ -44,11 +44,17 @@ const router = express.Router();
  *                 example: "12345678"
  *               role:
  *                 type: string
- *                 enum: ["admin", "super_admin", "user"]
- *                 example: "user"
+ *                 enum: ["ADMIN", "SUPER_ADMIN", "USER"]
+ *                 example: "USER"
  *               regionID:
  *                 type: integer
  *                 example: 1
+ *               image:
+ *                 type: string
+ *                 example: "aaa.png"
+ *               year:
+ *                 type: integer
+ *                 example: 1999
  *     responses:
  *       201:
  *         description: "Foydalanuvchi muvaffaqiyatli yaratildi"

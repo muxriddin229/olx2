@@ -4,6 +4,7 @@ const { Op } = require("sequelize");
 const joi = require("joi");
 const winston = require("winston");
 const { MongoDB } = require("winston-mongodb");
+const { authorize, protect } = require("../middleware/authMiddleware");
 
 
 const { json, combine, timestamp } = winston.format;
@@ -24,11 +25,17 @@ const logger = winston.createLogger({
 const routerLogger = logger.child({module: "categories"})
 
 const route = Router();
-
+/**
+ * @swagger
+ * tags:
+ *   name: Categories
+ *   description: API для управления заказами
+ */
 /**
  * @swagger
  * /category:
  *   get:
+ *     tags: [Categories]
  *     summary: Get all categories
  *     parameters:
  *       - in: query
@@ -77,6 +84,7 @@ route.get("/", async (req, res) => {
  * @swagger
  * /categories/{id}:
  *   get:
+ *     tags: [Categories]
  *     summary: Get a category by ID
  *     parameters:
  *       - in: path
@@ -112,6 +120,7 @@ route.get("/:id", async (req, res) => {
  * @swagger
  * /category:
  *   post:
+ *     tags: [Categories]
  *     summary: Create a new category
  *     requestBody:
  *       required: true
@@ -132,7 +141,7 @@ route.get("/:id", async (req, res) => {
  *       500:
  *         description: Server error
  */
-route.post("/", async (req, res) => {
+route.post("/", protect,authorize([ "ADMIN"]), async (req, res) => {
   try {
     let { name, image } = req.body;
     let schema = joi.object({
@@ -157,6 +166,7 @@ route.post("/", async (req, res) => {
  * @swagger
  * /categories/{id}:
  *   patch:
+ *     tags: [Categories]
  *     summary: Update a category
  *     parameters:
  *       - in: path
@@ -185,7 +195,7 @@ route.post("/", async (req, res) => {
  *       500:
  *         description: Server error
  */
-route.patch("/:id", async (req, res) => {
+route.patch("/:id",protect,authorize([ "ADMIN", "SUPER_ADMIN"]), async (req, res) => {
   try {
     let { id } = req.params;
     let category = await Category.findByPk(id);
@@ -213,6 +223,7 @@ route.patch("/:id", async (req, res) => {
  * @swagger
  * /categories/{id}:
  *   delete:
+ *     tags: [Categories]
  *     summary: Delete a category
  *     parameters:
  *       - in: path
@@ -228,11 +239,12 @@ route.patch("/:id", async (req, res) => {
  *       500:
  *         description: Server error
  */
-route.delete("/:id", async (req, res) => {
+route.delete("/:id",protect,authorize([ "ADMIN"]), async (req, res) => {
   try {
     let { id } = req.params;
     let category = await Category.findByPk(id);
     if (!category) return res.status(404).json({ message: "category not found" });
+    
     await category.destroy();
     res.json({ message: "category deleted" });
     routerLogger.log("info", "category deleted")
