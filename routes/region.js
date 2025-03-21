@@ -20,13 +20,19 @@ const logger = winston.createLogger({
     }),
   ],
 });
-
+/**
+ * @swagger
+ * tags:
+ *   name: Regions
+ *   description: API для управления регионами
+ */
 const routerLogger = logger.child({ module: "regions" });
 
 /**
  * @swagger
  * /region:
  *   get:
+ *     tags: [Regions]
  *     summary: Get all regions
  *     parameters:
  *       - in: query
@@ -75,6 +81,7 @@ route.get("/", async (req, res) => {
  * @swagger
  * /regions/{id}:
  *   get:
+ *     tags: [Regions]
  *     summary: Get a region by ID
  *     parameters:
  *       - in: path
@@ -112,6 +119,7 @@ let schema = joi.object({
  * @swagger
  * /region:
  *   post:
+ *     tags: [Regions]
  *     summary: Create a new region
  *     requestBody:
  *       required: true
@@ -154,6 +162,7 @@ let patchschema = joi.object({
  * @swagger
  * /regions/{id}:
  *   patch:
+ *     tags: [Regions]
  *     summary: Update a region by ID
  *     parameters:
  *       - in: path
@@ -203,6 +212,7 @@ route.patch("/:id", async (req, res) => {
  * @swagger
  * /regions/{id}:
  *   delete:
+ *     tags: [Regions]
  *     summary: Delete a region by ID
  *     parameters:
  *       - in: path

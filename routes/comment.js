@@ -27,13 +27,24 @@ const routerLogger = logger.child({ module: "comments" });
 const route = Router();
 
 route.use((req, res, next) => {
-  routerLogger.info(`${req.method} ${req.url}`, { body: req.body, query: req.query });
+  routerLogger.info(`${req.method} ${req.url}`, {
+    body: req.body,
+    query: req.query,
+  });
   next();
 });
 /**
  * @swagger
+ * tags:
+ *   name: Comments
+ *   description: API для управления регионами
+ */
+
+/**
+ * @swagger
  * /comment:
  *   get:
+ *     tags: [Comments]
  *     summary: Get all comments
  *     parameters:
  *       - name: limit
@@ -64,7 +75,12 @@ route.get("/", async (req, res) => {
     if (search) {
       whereCondition.message = { [Op.like]: `%${search}%` };
     }
-    let comments = await Comment.findAll({ where: whereCondition, limit, offset });
+    let comments = await Comment.findAll({
+      where: whereCondition,
+      limit,
+      offset,
+      include: [{ model: Product, attributes: ["name", "price"] }],
+    });
     res.json(comments.length ? comments : []);
   } catch (error) {
     routerLogger.error("error on comment get", { error: error.message });
@@ -72,14 +88,11 @@ route.get("/", async (req, res) => {
   }
 });
 
-
-
-
-
 /**
  * @swagger
  * /comment/my-comments:
  *   get:
+ *     tags: [Comments]
  *     summary: Get comments of the authenticated user
  *     security:
  *       - bearerAuth: []
@@ -126,11 +139,11 @@ route.get("/my-comments", protect, async (req, res) => {
   }
 });
 
-
 /**
  * @swagger
  * /comment/{id}:
  *   patch:
+ *     tags: [Comments]
  *     summary: Update a comment by ID
  *     security:
  *       - bearerAuth: []
@@ -166,18 +179,27 @@ route.get("/my-comments", protect, async (req, res) => {
 route.patch("/:id", protect, async (req, res) => {
   try {
     let { id } = req.params;
-    let comment = await Comment.findByPk(id);
+    let comment = await Comment.findByPk(id, {
+      include: [{ model: Product, attributes: ["name", "price"] }],
+    });
     if (!comment) return res.status(404).json({ message: "comment not found" });
     let userId = req.user.id;
-    if (userId !== comment.userId) return res.status(403).json({ message: "You don't have permission to update this comment" });
+    if (userId !== comment.userId)
+      return res
+        .status(403)
+        .json({ message: "You don't have permission to update this comment" });
     let { productId, star, message } = req.body;
     if (productId !== undefined) {
       let prd = await Product.findByPk(productId);
       if (!prd) return res.status(404).json({ message: "product not found" });
     }
-    let schema = joi.object({ star: joi.number().min(0).max(5).optional(), message: joi.string().min(2).max(255).optional() });
+    let schema = joi.object({
+      star: joi.number().min(0).max(5).optional(),
+      message: joi.string().min(2).max(255).optional(),
+    });
     let { error } = schema.validate({ star, message });
-    if (error) return res.status(400).json({ message: error.details[0].message });
+    if (error)
+      return res.status(400).json({ message: error.details[0].message });
     await comment.update({ productId, star, message });
     res.json({ message: "comment updated" });
   } catch (error) {
@@ -186,11 +208,11 @@ route.patch("/:id", protect, async (req, res) => {
   }
 });
 
-
 /**
  * @swagger
  * /comment/{id}:
  *   get:
+ *     tags: [Comments]
  *     summary: Get a comment by ID
  *     parameters:
  *       - name: id
@@ -219,6 +241,7 @@ route.get("/:id", async (req, res) => {
  * @swagger
  * /comment:
  *   post:
+ *     tags: [Comments]
  *     summary: Create a new comment
  *     security:
  *       - bearerAuth: []
@@ -258,7 +281,8 @@ route.post("/", protect, async (req, res) => {
       message: joi.string().min(2).max(255).required(),
     });
     let { error } = schema.validate({ star, message });
-    if (error) return res.status(400).json({ message: error.details[0].message });
+    if (error)
+      return res.status(400).json({ message: error.details[0].message });
     if (!prd) return res.status(404).json({ message: "product not found" });
     await Comment.create({ userId, productId, star, message });
     res.json({ message: "comment created" });
@@ -268,11 +292,11 @@ route.post("/", protect, async (req, res) => {
   }
 });
 
-
 /**
  * @swagger
  * /comment/{id}:
  *   delete:
+ *     tags: [Comments]
  *     summary: Delete a comment by ID
  *     security:
  *       - bearerAuth: []
@@ -297,7 +321,10 @@ route.delete("/:id", protect, async (req, res) => {
     let comment = await Comment.findByPk(id);
     if (!comment) return res.status(404).json({ message: "comment not found" });
     let userId = req.user.id;
-    if (userId !== comment.userId) return res.status(403).json({ message: "You don't have permission to delete this comment" });
+    if (userId !== comment.userId)
+      return res
+        .status(403)
+        .json({ message: "You don't have permission to delete this comment" });
     await comment.destroy();
     res.json({ message: "comment deleted" });
   } catch (error) {

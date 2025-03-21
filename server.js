@@ -4,6 +4,7 @@ const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes");
 const categoryRoutes = require("./routes/category");
 const orderRoutes = require("./routes/order");
+const orderItemRoutes = require("./routes/orderItem");
 const regionRoutes = require("./routes/region");
 const commentRoutes = require("./routes/comment");
 const swaggerJsDoc = require("swagger-jsdoc");
@@ -51,10 +52,11 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 app.use("/auth", authRoutes);
 app.use("/category", categoryRoutes);
-app.use("/products", productRoutes);
-app.use("/order", orderRoutes);
-app.use("/region", regionRoutes);
 app.use("/comment", commentRoutes);
+app.use("/order", orderRoutes);
+app.use("/orderItem", orderItemRoutes);
+app.use("/products", productRoutes);
+app.use("/region", regionRoutes);
 
 app.listen(5000, async () => {
   console.log("Server 5000-portda ishlayapti");

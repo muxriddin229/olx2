@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize");
 const { db } = require("../config/db");
+const Region = require("./region");
 
 const User = db.define("User", {
   fullName: {
@@ -12,12 +13,10 @@ const User = db.define("User", {
   },
   email: {
     type: DataTypes.STRING,
-    unique: true,
     allowNull: false,
   },
   phone: {
     type: DataTypes.STRING,
-    unique: true,
     allowNull: false,
   },
   role: {
@@ -30,14 +29,13 @@ const User = db.define("User", {
   year: {
     type: DataTypes.INTEGER,
   },
-  regionID: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
   status: {
     type: DataTypes.STRING,
     allowNull: false,
   },
 });
+
+Region.hasMany(User, {foreignKey: "regionId"})
+User.belongsTo(Region, {foreignKey: "regionId"})
 
 module.exports = User;

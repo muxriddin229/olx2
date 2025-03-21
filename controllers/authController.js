@@ -10,19 +10,15 @@ const {
   loginSchema,
 } = require("../validations/authValidation");
 const { authorize, protect} = require("../middleware/authMiddleware");
+const { userValidation } = require("../validations/userValidation");
 
 // 🔹 Foydalanuvchini ro‘yxatdan o‘tkazish (Register)
 exports.register = async (req, res) => {
   try {
-    const { fullName, email, phone, password, role, regionID, image, year} = req.body;
+    const {email, password, regionID} = req.body;
 
 
-    const { error } = registerSchema.validate({
-      fullName,
-      email,
-      phone,
-      password,
-    });
+    const { error } = userValidation.validate(req.body);
     if (error)
       return res.status(400).json({ message: error.details[0].message });
 
@@ -34,16 +30,9 @@ exports.register = async (req, res) => {
     if (!region) return res.status(404).json({ message: "Region topilmadi." });
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await User.create({
-      fullName,
-      image,
-      email,
-      phone,
+    const newUser = await User.create({...req.body,
       password: hashedPassword,
-      role,
-      status: "PENDING",
-      regionID,
-      year
+      status: "PENDING"
     });
     res
       .status(201)

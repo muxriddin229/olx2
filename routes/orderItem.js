@@ -21,12 +21,19 @@ const logger = winston.createLogger({
     }),
   ],
 });
+/**
+ * @swagger
+ * tags:
+ *   name: OrderItems
+ *   description: API для управления заказами
+ */
 
 const routerLogger = logger.child({module: "orderItems"})
 /**
  * @swagger
- * /order-items:
+ * /orderItem:
  *   post:
+ *     tags: [OrderItems]
  *     summary: Add a product to an order
  *     requestBody:
  *       required: true
